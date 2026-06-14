@@ -1,0 +1,27 @@
+[
+  {
+    "customerId": "C1001",
+    "membership": "Gold",
+    "preferredChannel": "Email"
+  },
+  {
+    "customerId": "C1002",
+    "membership": "Silver",
+    "preferredChannel": "SMS"
+  },
+  {
+    "customerId": "C1003",
+    "membership": "Platinum",
+    "preferredChannel": "WhatsApp"
+  },
+  {
+    "customerId": "C1006",
+    "membership": "Gold",
+    "preferredChannel": "Email"
+  },
+  {
+    "customerId": "C1007",
+    "membership": "Bronze",
+    "preferredChannel": "Phone"
+  }
+]

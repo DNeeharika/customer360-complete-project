@@ -1,0 +1,30 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Java / Maven
+target/
+*.class
+*.jar
+
+# Node / React
+node_modules/
+dist/
+.vite/
+
+# Logs
+*.log
+
+# Environment / Secrets
+.env
+.env.*
+application-local.properties
+application-dev.properties
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
