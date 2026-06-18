@@ -1,23 +1,28 @@
 package com.customer360.backend.loader;
 
 import com.customer360.backend.model.CustomerOrder;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
-@Order(1)
-public class OrderCsvLoader implements CommandLineRunner {
+public class OrderCsvLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderCsvLoader.class);
+
+    private static final String ORDER_FILE_PATH = "data/customer_orders.csv";
 
     private final DataCache dataCache;
 
@@ -25,72 +30,142 @@ public class OrderCsvLoader implements CommandLineRunner {
         this.dataCache = dataCache;
     }
 
-    @Override
-    public void run(String... args) {
-        loadOrders();
-    }
+    @PostConstruct
+    public void loadOrders() {
+        Map<String, List<CustomerOrder>> ordersByCustomerId = new HashMap<>();
 
-    private void loadOrders() {
+        int loadedRows = 0;
+        int skippedRows = 0;
+
         try {
             InputStream inputStream = getClass()
                     .getClassLoader()
-                    .getResourceAsStream("data/customer_orders.csv");
+                    .getResourceAsStream(ORDER_FILE_PATH);
 
             if (inputStream == null) {
-                logger.error("customer_orders.csv file not found.");
-                return;
+                throw new IllegalStateException("Customer orders CSV file not found: " + ORDER_FILE_PATH);
             }
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(inputStream, StandardCharsets.UTF_8)
+            )) {
+                String line;
+                boolean isHeader = true;
 
-            String line;
-            boolean isHeader = true;
-            int loadedCount = 0;
-            int skippedCount = 0;
-
-            while ((line = reader.readLine()) != null) {
-                if (isHeader) {
-                    isHeader = false;
-                    continue;
-                }
-
-                String[] columns = line.split(",");
-
-                if (columns.length != 4) {
-                    logger.warn("Invalid CSV row skipped: {}", line);
-                    skippedCount++;
-                    continue;
-                }
-
-                try {
-                    String customerId = columns[0].trim();
-                    String orderId = columns[1].trim();
-                    LocalDate orderDate = LocalDate.parse(columns[2].trim());
-                    BigDecimal amount = new BigDecimal(columns[3].trim());
-
-                    if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                        logger.warn("Negative amount row skipped: {}", line);
-                        skippedCount++;
+                while ((line = reader.readLine()) != null) {
+                    if (isHeader) {
+                        isHeader = false;
                         continue;
                     }
 
-                    CustomerOrder order = new CustomerOrder(customerId, orderId, orderDate, amount);
-                    dataCache.addOrder(order);
-                    loadedCount++;
+                    if (line.isBlank()) {
+                        continue;
+                    }
 
-                } catch (Exception ex) {
-                    logger.warn("Invalid CSV data skipped: {}", line);
-                    skippedCount++;
+                    String[] columns = line.split(",", -1);
+
+                    if (columns.length < 8) {
+                        skippedRows++;
+                        logger.warn(
+                                "Invalid CSV row skipped. Expected 8 columns but found {}. Row: {}",
+                                columns.length,
+                                line
+                        );
+                        continue;
+                    }
+
+                    try {
+                        String customerId = clean(columns[0]);
+                        String orderId = clean(columns[1]);
+                        LocalDate orderDate = LocalDate.parse(clean(columns[2]));
+                        BigDecimal amount = parseAmount(clean(columns[3]));
+                        String productCategory = clean(columns[4]);
+                        String orderStatus = clean(columns[5]);
+                        String paymentMode = clean(columns[6]);
+                        BigDecimal discountAmount = parseDiscountAmount(clean(columns[7]));
+
+                        if (customerId.isBlank() || orderId.isBlank()) {
+                            skippedRows++;
+                            logger.warn("Invalid CSV row skipped. customerId/orderId is blank. Row: {}", line);
+                            continue;
+                        }
+
+                        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                            skippedRows++;
+                            logger.warn("Invalid CSV row skipped. Negative amount is not allowed. Row: {}", line);
+                            continue;
+                        }
+
+                        if (discountAmount.compareTo(BigDecimal.ZERO) < 0) {
+                            skippedRows++;
+                            logger.warn("Invalid CSV row skipped. Negative discount amount is not allowed. Row: {}", line);
+                            continue;
+                        }
+
+                        if (discountAmount.compareTo(amount) > 0) {
+                            skippedRows++;
+                            logger.warn("Invalid CSV row skipped. Discount amount cannot be greater than order amount. Row: {}", line);
+                            continue;
+                        }
+
+                        CustomerOrder order = new CustomerOrder();
+                        order.setCustomerId(customerId);
+                        order.setOrderId(orderId);
+                        order.setOrderDate(orderDate);
+                        order.setAmount(amount);
+                        order.setProductCategory(defaultIfBlank(productCategory));
+                        order.setOrderStatus(defaultIfBlank(orderStatus));
+                        order.setPaymentMode(defaultIfBlank(paymentMode));
+                        order.setDiscountAmount(discountAmount);
+
+                        ordersByCustomerId
+                                .computeIfAbsent(customerId, key -> new ArrayList<>())
+                                .add(order);
+
+                        loadedRows++;
+
+                    } catch (Exception ex) {
+                        skippedRows++;
+                        logger.warn("Invalid CSV data skipped. Row: {}", line);
+                    }
                 }
             }
 
-            logger.info("Customer orders CSV loaded successfully. Loaded rows: {}, Skipped rows: {}",
-                    loadedCount,
-                    skippedCount
+            dataCache.setOrdersByCustomerId(ordersByCustomerId);
+
+            logger.info(
+                    "Customer orders CSV loaded successfully. Loaded rows: {}, Skipped rows: {}",
+                    loadedRows,
+                    skippedRows
             );
 
         } catch (Exception ex) {
-            logger.error("Error while loading customer_orders.csv", ex);
+            logger.error("Failed to load customer orders CSV file.", ex);
+            throw new IllegalStateException("Failed to load customer orders CSV file.", ex);
         }
+    }
+
+    private BigDecimal parseAmount(String value) {
+        if (value == null || value.isBlank()) {
+            throw new NumberFormatException("Amount is blank");
+        }
+
+        return new BigDecimal(value);
+    }
+
+    private BigDecimal parseDiscountAmount(String value) {
+        if (value == null || value.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+
+        return new BigDecimal(value);
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String defaultIfBlank(String value) {
+        return value == null || value.isBlank() ? "Not Available" : value.trim();
     }
 }

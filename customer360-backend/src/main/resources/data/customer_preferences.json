@@ -2,26 +2,46 @@
   {
     "customerId": "C1001",
     "membership": "Gold",
-    "preferredChannel": "Email"
+    "preferredChannel": "Email",
+    "preferredLanguage": "English",
+    "notificationOptIn": true,
+    "marketingConsent": true,
+    "preferredContactTime": "Evening"
   },
   {
     "customerId": "C1002",
     "membership": "Silver",
-    "preferredChannel": "SMS"
+    "preferredChannel": "SMS",
+    "preferredLanguage": "Hindi",
+    "notificationOptIn": true,
+    "marketingConsent": false,
+    "preferredContactTime": "Morning"
   },
   {
     "customerId": "C1003",
     "membership": "Platinum",
-    "preferredChannel": "WhatsApp"
+    "preferredChannel": "WhatsApp",
+    "preferredLanguage": "English",
+    "notificationOptIn": true,
+    "marketingConsent": true,
+    "preferredContactTime": "Afternoon"
   },
   {
     "customerId": "C1006",
     "membership": "Gold",
-    "preferredChannel": "Email"
+    "preferredChannel": "Email",
+    "preferredLanguage": "English",
+    "notificationOptIn": false,
+    "marketingConsent": false,
+    "preferredContactTime": "Evening"
   },
   {
     "customerId": "C1007",
     "membership": "Bronze",
-    "preferredChannel": "Phone"
+    "preferredChannel": "Phone",
+    "preferredLanguage": "Tamil",
+    "notificationOptIn": true,
+    "marketingConsent": true,
+    "preferredContactTime": "Morning"
   }
 ]

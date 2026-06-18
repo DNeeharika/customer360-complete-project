@@ -1,10 +1,10 @@
-customerId,orderId,orderDate,amount
-C1001,O1001,2026-01-10,2500
-C1001,O1002,2026-02-15,1200
-C1002,O1003,2026-01-20,5600
-C1003,O1004,2026-03-05,800
-C1003,O1005,2026-03-22,1500
-C1006,O1006,2026-04-01,3000
-C1004,O1007,2026-04-10,0
-C1005,O1008,2026-04-12,4500
-C1005,O1009,2026-04-20,invalid_amount
+customerId,orderId,orderDate,amount,productCategory,orderStatus,paymentMode,discountAmount
+C1001,O1001,2026-01-10,2500,Electronics,Completed,UPI,100
+C1001,O1002,2026-02-15,1200,Accessories,Completed,Credit Card,50
+C1002,O1003,2026-01-20,5600,Home Appliances,Completed,Net Banking,200
+C1003,O1004,2026-03-05,800,Books,Completed,UPI,0
+C1003,O1005,2026-03-22,1500,Fashion,Completed,Debit Card,75
+C1006,O1006,2026-04-01,3000,Electronics,Completed,UPI,150
+C1004,O1007,2026-04-10,0,Trial,Pending,NA,0
+C1005,O1008,2026-04-12,4500,Office Supplies,Completed,Credit Card,250
+C1005,O1009,2026-04-20,invalid_amount,Fashion,Failed,UPI,0
