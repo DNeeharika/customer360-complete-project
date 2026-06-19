@@ -31,6 +31,9 @@ function CustomerListPage() {
     city: "",
     membership: "",
     preferredChannel: "",
+    orderAvailability: "All",
+    minAmount: "",
+    maxAmount: "",
     sortBy: "customerId",
     sortDir: "asc",
     rowsPerPage: 10,
@@ -43,6 +46,9 @@ function CustomerListPage() {
     filters.city,
     filters.membership,
     filters.preferredChannel,
+    filters.orderAvailability,
+    filters.minAmount,
+    filters.maxAmount,
     filters.sortBy,
     filters.sortDir,
     filters.rowsPerPage,
@@ -58,6 +64,12 @@ function CustomerListPage() {
         city: filters.city || undefined,
         membership: filters.membership || undefined,
         preferredChannel: filters.preferredChannel || undefined,
+        orderAvailability:
+          filters.orderAvailability === "All"
+            ? undefined
+            : filters.orderAvailability,
+        minAmount: filters.minAmount || undefined,
+        maxAmount: filters.maxAmount || undefined,
         sortBy: filters.sortBy,
         sortDir: filters.sortDir,
         page: pageNumber,
@@ -133,6 +145,9 @@ function CustomerListPage() {
       city: "",
       membership: "",
       preferredChannel: "",
+      orderAvailability: "All",
+      minAmount: "",
+      maxAmount: "",
       sortBy: "customerId",
       sortDir: "asc",
       rowsPerPage: 10,
@@ -220,7 +235,8 @@ function CustomerListPage() {
       } else {
         try {
           const summaryResponse = await getCustomerSummary(customerId);
-          summaryForExport = summaryResponse?.summary || "AI summary not generated.";
+          summaryForExport =
+            summaryResponse?.summary || "AI summary not generated.";
         } catch (summaryError) {
           console.error(summaryError);
           summaryForExport = "AI summary not available.";
@@ -239,10 +255,22 @@ function CustomerListPage() {
         ["Profile", "Customer Type", customer.customerType],
 
         ["Preference", "Membership", formatMembership(customer.membership)],
-        ["Preference", "Preferred Channel", formatPreferredChannel(customer.preferredChannel)],
+        [
+          "Preference",
+          "Preferred Channel",
+          formatPreferredChannel(customer.preferredChannel),
+        ],
         ["Preference", "Preferred Language", customer.preferredLanguage],
-        ["Preference", "Notification Opt-In", formatBoolean(customer.notificationOptIn)],
-        ["Preference", "Marketing Consent", formatBoolean(customer.marketingConsent)],
+        [
+          "Preference",
+          "Notification Opt-In",
+          formatBoolean(customer.notificationOptIn),
+        ],
+        [
+          "Preference",
+          "Marketing Consent",
+          formatBoolean(customer.marketingConsent),
+        ],
         ["Preference", "Preferred Contact Time", customer.preferredContactTime],
 
         ["Business", "Total Orders", customer.totalOrders],
@@ -511,6 +539,40 @@ function CustomerListPage() {
               <option value="Phone">Phone</option>
               <option value="Not Available">Not Available</option>
             </select>
+          </FilterField>
+
+          <FilterField label="Order Availability">
+            <select
+              name="orderAvailability"
+              value={filters.orderAvailability}
+              onChange={handleFilterChange}
+            >
+              <option value="All">All</option>
+              <option value="With Orders">With Orders</option>
+              <option value="Without Orders">Without Orders</option>
+            </select>
+          </FilterField>
+
+          <FilterField label="Min Net Amount">
+            <input
+              type="number"
+              min="0"
+              name="minAmount"
+              value={filters.minAmount}
+              onChange={handleFilterChange}
+              placeholder="3000"
+            />
+          </FilterField>
+
+          <FilterField label="Max Net Amount">
+            <input
+              type="number"
+              min="0"
+              name="maxAmount"
+              value={filters.maxAmount}
+              onChange={handleFilterChange}
+              placeholder="5000"
+            />
           </FilterField>
 
           <FilterField label="Sort By">
@@ -1031,6 +1093,9 @@ function countAppliedFilters(filters) {
   if (filters.city) count++;
   if (filters.membership) count++;
   if (filters.preferredChannel) count++;
+  if (filters.orderAvailability && filters.orderAvailability !== "All") count++;
+  if (filters.minAmount) count++;
+  if (filters.maxAmount) count++;
 
   return count;
 }
