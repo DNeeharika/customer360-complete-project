@@ -8,6 +8,8 @@ import com.customer360.backend.model.CustomerPreference;
 import com.customer360.backend.model.CustomerProfile;
 import com.customer360.backend.repository.CustomerProfileRepository;
 import org.springframework.stereotype.Service;
+import com.customer360.backend.dto.CustomerPageResponse;
+
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -56,6 +58,66 @@ public class CustomerConsolidationService {
         customers = applySorting(customers, sortBy, sortDir);
 
         return customers;
+    }
+
+    public CustomerPageResponse getCustomersPage(
+            String search,
+            String city,
+            String membership,
+            String preferredChannel,
+            String sortBy,
+            String sortDir,
+            int page,
+            int size
+    ) {
+        List<CustomerDetailResponse> allCustomers = getAllCustomers(
+                search,
+                city,
+                membership,
+                preferredChannel,
+                sortBy,
+                sortDir
+        );
+
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 100);
+
+        int totalElements = allCustomers.size();
+        int totalPages = totalElements == 0
+                ? 0
+                : (int) Math.ceil((double) totalElements / safeSize);
+
+        if (totalPages > 0 && safePage >= totalPages) {
+            safePage = totalPages - 1;
+        }
+
+        int fromIndex = safePage * safeSize;
+        int toIndex = Math.min(fromIndex + safeSize, totalElements);
+
+        List<CustomerDetailResponse> pageContent;
+
+        if (fromIndex >= totalElements || totalElements == 0) {
+            pageContent = List.of();
+        } else {
+            pageContent = allCustomers.subList(fromIndex, toIndex);
+        }
+
+        boolean first = safePage == 0;
+        boolean last = totalPages == 0 || safePage == totalPages - 1;
+        boolean hasNext = totalPages > 0 && safePage < totalPages - 1;
+        boolean hasPrevious = safePage > 0;
+
+        return new CustomerPageResponse(
+                pageContent,
+                safePage,
+                safeSize,
+                totalElements,
+                totalPages,
+                first,
+                last,
+                hasNext,
+                hasPrevious
+        );
     }
 
     public CustomerDetailResponse getCustomerDetails(String customerId) {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   downloadExport,
   getCustomerDetails,
-  getCustomers,
+  getCustomersPage,
   getCustomerSummary,
 } from "../api/customerApi";
 
@@ -15,36 +15,67 @@ function CustomerListPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    totalElements: 0,
+    totalPages: 1,
+    first: true,
+    last: true,
+    hasNext: false,
+    hasPrevious: false,
+  });
+
   const [filters, setFilters] = useState({
     search: "",
     city: "",
     membership: "",
     preferredChannel: "",
-    orderAvailability: "All",
-    minAmount: "",
-    maxAmount: "",
     sortBy: "customerId",
     sortDir: "asc",
     rowsPerPage: 10,
   });
 
-  const [currentPage, setCurrentPage] = useState(1);
-
   useEffect(() => {
-    loadCustomers();
-  }, []);
+    loadCustomers(0);
+  }, [
+    filters.search,
+    filters.city,
+    filters.membership,
+    filters.preferredChannel,
+    filters.sortBy,
+    filters.sortDir,
+    filters.rowsPerPage,
+  ]);
 
-  const loadCustomers = async () => {
+  const loadCustomers = async (pageNumber = 0) => {
     try {
       setLoading(true);
       setError("");
 
-      const data = await getCustomers({
-        sortBy: "customerId",
-        sortDir: "asc",
+      const data = await getCustomersPage({
+        search: filters.search || undefined,
+        city: filters.city || undefined,
+        membership: filters.membership || undefined,
+        preferredChannel: filters.preferredChannel || undefined,
+        sortBy: filters.sortBy,
+        sortDir: filters.sortDir,
+        page: pageNumber,
+        size: filters.rowsPerPage,
       });
 
-      setCustomers(Array.isArray(data) ? data : []);
+      setCustomers(data.content || []);
+
+      setPagination({
+        page: data.page ?? 0,
+        size: data.size ?? Number(filters.rowsPerPage),
+        totalElements: data.totalElements ?? 0,
+        totalPages: data.totalPages === 0 ? 1 : data.totalPages,
+        first: data.first ?? true,
+        last: data.last ?? true,
+        hasNext: data.hasNext ?? false,
+        hasPrevious: data.hasPrevious ?? false,
+      });
     } catch (err) {
       console.error(err);
       setError("Unable to load customers. Please check whether backend is running.");
@@ -53,107 +84,8 @@ function CustomerListPage() {
     }
   };
 
-  const filteredCustomers = useMemo(() => {
-    let result = [...customers];
-
-    const search = filters.search.trim().toLowerCase();
-    const city = filters.city.trim().toLowerCase();
-    const membership = filters.membership.trim().toLowerCase();
-    const preferredChannel = filters.preferredChannel.trim().toLowerCase();
-    const minAmount = filters.minAmount === "" ? null : Number(filters.minAmount);
-    const maxAmount = filters.maxAmount === "" ? null : Number(filters.maxAmount);
-
-    if (search) {
-      result = result.filter((customer) => {
-        const text = [
-          customer.customerId,
-          customer.name,
-          customer.email,
-          customer.mobile,
-          customer.city,
-          customer.customerType,
-          customer.customerSegment,
-          customer.membership,
-          customer.preferredChannel,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return text.includes(search);
-      });
-    }
-
-    if (city) {
-      result = result.filter((customer) =>
-        safe(customer.city).toLowerCase().includes(city)
-      );
-    }
-
-    if (membership) {
-      result = result.filter(
-        (customer) =>
-          formatMembership(customer.membership).toLowerCase() === membership
-      );
-    }
-
-    if (preferredChannel) {
-      result = result.filter(
-        (customer) =>
-          formatPreferredChannel(customer.preferredChannel).toLowerCase() ===
-          preferredChannel
-      );
-    }
-
-    if (filters.orderAvailability === "With Orders") {
-      result = result.filter((customer) => Number(customer.totalOrders || 0) > 0);
-    }
-
-    if (filters.orderAvailability === "Without Orders") {
-      result = result.filter((customer) => Number(customer.totalOrders || 0) === 0);
-    }
-
-    if (minAmount !== null && !Number.isNaN(minAmount)) {
-      result = result.filter(
-        (customer) => Number(customer.netOrderAmount || 0) >= minAmount
-      );
-    }
-
-    if (maxAmount !== null && !Number.isNaN(maxAmount)) {
-      result = result.filter(
-        (customer) => Number(customer.netOrderAmount || 0) <= maxAmount
-      );
-    }
-
-    result.sort((a, b) => {
-      const field = filters.sortBy;
-      const direction = filters.sortDir === "desc" ? -1 : 1;
-
-      const aValue = a[field];
-      const bValue = b[field];
-
-      if (typeof aValue === "number" || typeof bValue === "number") {
-        return (Number(aValue || 0) - Number(bValue || 0)) * direction;
-      }
-
-      return safe(aValue).localeCompare(safe(bValue)) * direction;
-    });
-
-    return result;
-  }, [customers, filters]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredCustomers.length / Number(filters.rowsPerPage))
-  );
-
-  const paginatedCustomers = useMemo(() => {
-    const rowsPerPage = Number(filters.rowsPerPage);
-    const start = (currentPage - 1) * rowsPerPage;
-    return filteredCustomers.slice(start, start + rowsPerPage);
-  }, [filteredCustomers, currentPage, filters.rowsPerPage]);
-
   const dashboardStats = useMemo(() => {
-    const totalCustomers = customers.length;
+    const totalCustomers = pagination.totalElements;
 
     const totalOrders = customers.reduce(
       (sum, customer) => sum + Number(customer.totalOrders || 0),
@@ -184,7 +116,7 @@ function CustomerListPage() {
       activeMembershipCustomers,
       customersWithoutOrders,
     };
-  }, [customers]);
+  }, [customers, pagination.totalElements]);
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
@@ -193,8 +125,6 @@ function CustomerListPage() {
       ...previous,
       [name]: value,
     }));
-
-    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -203,15 +133,13 @@ function CustomerListPage() {
       city: "",
       membership: "",
       preferredChannel: "",
-      orderAvailability: "All",
-      minAmount: "",
-      maxAmount: "",
       sortBy: "customerId",
       sortDir: "asc",
       rowsPerPage: 10,
     });
 
-    setCurrentPage(1);
+    setSummary("");
+    setSelectedCustomer(null);
   };
 
   const handleViewCustomer = async (customerId) => {
@@ -266,8 +194,8 @@ function CustomerListPage() {
     }
   };
 
-  const exportFilteredJson = () => {
-    const blob = new Blob([JSON.stringify(filteredCustomers, null, 2)], {
+  const exportCurrentPageJson = () => {
+    const blob = new Blob([JSON.stringify(customers, null, 2)], {
       type: "application/json",
     });
 
@@ -275,7 +203,7 @@ function CustomerListPage() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "customer360-filtered-customers.json";
+    link.download = "customer360-current-page-customers.json";
     link.click();
 
     URL.revokeObjectURL(url);
@@ -293,10 +221,6 @@ function CustomerListPage() {
         try {
           const summaryResponse = await getCustomerSummary(customerId);
           summaryForExport = summaryResponse?.summary || "AI summary not generated.";
-
-          if (selectedCustomer?.customerId === customerId) {
-            setSummary(summaryForExport);
-          }
         } catch (summaryError) {
           console.error(summaryError);
           summaryForExport = "AI summary not available.";
@@ -424,7 +348,7 @@ function CustomerListPage() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>${selectedCustomer.customerId} Profile</title>
+          <title>${safe(selectedCustomer.customerId)} Profile</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
             h1, h2 { color: #1e3a8a; }
@@ -510,37 +434,37 @@ function CustomerListPage() {
           icon="👥"
           label="Total Customers"
           value={dashboardStats.totalCustomers}
-          hint="Current customer records"
+          hint="Backend filtered records"
         />
         <StatCard
           icon="🛒"
-          label="Total Orders"
+          label="Page Orders"
           value={dashboardStats.totalOrders}
-          hint="Consolidated order count"
+          hint="Orders in current page"
         />
         <StatCard
           icon="₹"
-          label="Total Order Amount"
+          label="Page Order Amount"
           value={formatCurrency(dashboardStats.totalOrderAmount)}
-          hint="Before discount"
+          hint="Current page total"
         />
         <StatCard
           icon="↗"
           label="Avg. Order Amount"
           value={formatCurrency(dashboardStats.averageOrderAmount)}
-          hint="Order value average"
+          hint="Current page average"
         />
         <StatCard
           icon="♛"
-          label="Active Membership Customers"
+          label="Membership Customers"
           value={dashboardStats.activeMembershipCustomers}
-          hint="Customers with membership"
+          hint="Current page count"
         />
         <StatCard
           icon="⚠"
           label="Customers Without Orders"
           value={dashboardStats.customersWithoutOrders}
-          hint="Need follow-up review"
+          hint="Current page count"
         />
       </section>
 
@@ -570,7 +494,7 @@ function CustomerListPage() {
               <option value="Gold">Gold</option>
               <option value="Silver">Silver</option>
               <option value="Platinum">Platinum</option>
-              <option value="No Membership">No Membership</option>
+              <option value="Not Available">No Membership</option>
             </select>
           </FilterField>
 
@@ -589,37 +513,51 @@ function CustomerListPage() {
             </select>
           </FilterField>
 
-          <FilterField label="Order Availability">
+          <FilterField label="Sort By">
             <select
-              name="orderAvailability"
-              value={filters.orderAvailability}
+              name="sortBy"
+              value={filters.sortBy}
               onChange={handleFilterChange}
             >
-              <option>All</option>
-              <option>With Orders</option>
-              <option>Without Orders</option>
+              <option value="customerId">Customer ID</option>
+              <option value="name">Name</option>
+              <option value="city">City</option>
+              <option value="membership">Membership</option>
+              <option value="preferredChannel">Preferred Channel</option>
+              <option value="totalOrders">Total Orders</option>
+              <option value="totalOrderAmount">Total Order Amount</option>
+              <option value="netOrderAmount">Net Order Amount</option>
+              <option value="rewardPoints">Reward Points</option>
+              <option value="customerSegment">Customer Segment</option>
+              <option value="dataQualityScore">Data Quality Score</option>
             </select>
           </FilterField>
 
-          <FilterField label="Min Net Amount">
-            <input
-              name="minAmount"
-              value={filters.minAmount}
+          <FilterField label="Direction">
+            <select
+              name="sortDir"
+              value={filters.sortDir}
               onChange={handleFilterChange}
-              placeholder="1000"
-            />
+            >
+              <option value="asc">Asc</option>
+              <option value="desc">Desc</option>
+            </select>
           </FilterField>
 
-          <FilterField label="Max Net Amount">
-            <input
-              name="maxAmount"
-              value={filters.maxAmount}
+          <FilterField label="Rows">
+            <select
+              name="rowsPerPage"
+              value={filters.rowsPerPage}
               onChange={handleFilterChange}
-              placeholder="50000"
-            />
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={20}>20</option>
+            </select>
           </FilterField>
 
-          <button onClick={() => setCurrentPage(1)}>Apply Filters</button>
+          <button onClick={() => loadCustomers(0)}>Apply Filters</button>
           <button className="light-button" onClick={clearFilters}>
             Clear Filters
           </button>
@@ -631,61 +569,17 @@ function CustomerListPage() {
       <section className="dashboard-card list-panel">
         <div className="panel-title-row sort-row">
           <div className="sort-controls">
-            <h2>☷ Sort & View</h2>
-
-            <label>
-              Sort By
-              <select
-                name="sortBy"
-                value={filters.sortBy}
-                onChange={handleFilterChange}
-              >
-                <option value="customerId">Customer ID</option>
-                <option value="name">Name</option>
-                <option value="city">City</option>
-                <option value="membership">Membership</option>
-                <option value="preferredChannel">Preferred Channel</option>
-                <option value="totalOrders">Total Orders</option>
-                <option value="totalOrderAmount">Total Order Amount</option>
-                <option value="netOrderAmount">Net Order Amount</option>
-                <option value="rewardPoints">Reward Points</option>
-                <option value="customerSegment">Customer Segment</option>
-                <option value="dataQualityScore">Data Quality Score</option>
-              </select>
-            </label>
-
-            <label>
-              Direction
-              <select
-                name="sortDir"
-                value={filters.sortDir}
-                onChange={handleFilterChange}
-              >
-                <option value="asc">Asc</option>
-                <option value="desc">Desc</option>
-              </select>
-            </label>
-
-            <label>
-              Rows
-              <select
-                name="rowsPerPage"
-                value={filters.rowsPerPage}
-                onChange={handleFilterChange}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-                <option value={20}>20</option>
-              </select>
-            </label>
+            <h2>☷ Backend Pagination</h2>
+            <span>
+              Page {pagination.page + 1} of {pagination.totalPages}
+            </span>
           </div>
 
           <div className="export-buttons">
             <button className="success-button" onClick={() => downloadExport("csv")}>
               ⇩ Export CSV
             </button>
-            <button className="purple-button" onClick={exportFilteredJson}>
+            <button className="purple-button" onClick={exportCurrentPageJson}>
               ⇩ Export JSON
             </button>
             <button onClick={() => downloadExport("excel")}>Export Excel</button>
@@ -697,15 +591,15 @@ function CustomerListPage() {
           <table className="customer-table">
             <thead>
               <tr>
-                <th>Customer ID ↕</th>
-                <th>Name ↕</th>
-                <th>City ↕</th>
-                <th>Membership ↕</th>
-                <th>Preferred Channel ↕</th>
-                <th>Total Orders ↕</th>
-                <th>Total Order Amount ↕</th>
-                <th>Net Amount ↕</th>
-                <th>Status ↕</th>
+                <th>Customer ID</th>
+                <th>Name</th>
+                <th>City</th>
+                <th>Membership</th>
+                <th>Preferred Channel</th>
+                <th>Total Orders</th>
+                <th>Total Order Amount</th>
+                <th>Net Amount</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -719,7 +613,7 @@ function CustomerListPage() {
                 </tr>
               )}
 
-              {!loading && paginatedCustomers.length === 0 && (
+              {!loading && customers.length === 0 && (
                 <tr>
                   <td colSpan="10" className="empty-cell">
                     No customers found.
@@ -728,7 +622,7 @@ function CustomerListPage() {
               )}
 
               {!loading &&
-                paginatedCustomers.map((customer) => (
+                customers.map((customer) => (
                   <tr
                     key={customer.customerId}
                     onClick={() => handleViewCustomer(customer.customerId)}
@@ -812,47 +706,51 @@ function CustomerListPage() {
         <div className="pagination-row">
           <span>
             Showing{" "}
-            {paginatedCustomers.length === 0
+            {pagination.totalElements === 0
               ? 0
-              : (currentPage - 1) * Number(filters.rowsPerPage) + 1}{" "}
+              : pagination.page * pagination.size + 1}{" "}
             to{" "}
             {Math.min(
-              currentPage * Number(filters.rowsPerPage),
-              filteredCustomers.length
+              (pagination.page + 1) * pagination.size,
+              pagination.totalElements
             )}{" "}
-            of {filteredCustomers.length} filtered records
+            of {pagination.totalElements} records
           </span>
 
           <div className="pagination-buttons">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)}>
+            <button disabled={pagination.first} onClick={() => loadCustomers(0)}>
               «
             </button>
+
             <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((page) => page - 1)}
+              disabled={!pagination.hasPrevious}
+              onClick={() => loadCustomers(Math.max(0, pagination.page - 1))}
             >
               ‹
             </button>
 
-            {buildPageNumbers(currentPage, totalPages).map((page) => (
-              <button
-                key={page}
-                className={page === currentPage ? "active-page" : ""}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            ))}
+            {buildPageNumbers(pagination.page + 1, pagination.totalPages).map(
+              (pageNumber) => (
+                <button
+                  key={pageNumber}
+                  className={pageNumber === pagination.page + 1 ? "active-page" : ""}
+                  onClick={() => loadCustomers(pageNumber - 1)}
+                >
+                  {pageNumber}
+                </button>
+              )
+            )}
 
             <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((page) => page + 1)}
+              disabled={!pagination.hasNext}
+              onClick={() => loadCustomers(pagination.page + 1)}
             >
               ›
             </button>
+
             <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(totalPages)}
+              disabled={pagination.last}
+              onClick={() => loadCustomers(pagination.totalPages - 1)}
             >
               »
             </button>
@@ -906,9 +804,7 @@ function CustomerListPage() {
                   Export Profile CSV
                 </button>
 
-                <button onClick={exportSelectedCustomerPdf}>
-                  Print / PDF
-                </button>
+                <button onClick={exportSelectedCustomerPdf}>Print / PDF</button>
 
                 <button
                   className="star-action-button"
@@ -1117,8 +1013,9 @@ function Metric({ label, value }) {
 
 function buildPageNumbers(currentPage, totalPages) {
   const pages = [];
+  const safeTotalPages = Math.max(1, totalPages || 1);
   const start = Math.max(1, currentPage - 2);
-  const end = Math.min(totalPages, currentPage + 2);
+  const end = Math.min(safeTotalPages, currentPage + 2);
 
   for (let page = start; page <= end; page++) {
     pages.push(page);
@@ -1134,9 +1031,6 @@ function countAppliedFilters(filters) {
   if (filters.city) count++;
   if (filters.membership) count++;
   if (filters.preferredChannel) count++;
-  if (filters.orderAvailability !== "All") count++;
-  if (filters.minAmount) count++;
-  if (filters.maxAmount) count++;
 
   return count;
 }
