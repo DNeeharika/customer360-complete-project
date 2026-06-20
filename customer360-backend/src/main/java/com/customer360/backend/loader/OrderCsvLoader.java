@@ -1,5 +1,6 @@
 package com.customer360.backend.loader;
 
+import com.customer360.backend.dto.DataUploadResponse;
 import com.customer360.backend.model.CustomerOrder;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class OrderCsvLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderCsvLoader.class);
 
-    private static final String ORDER_FILE_PATH = "data/customer_orders.csv";
+    private static final String DEFAULT_ORDER_FILE_PATH = "data/customer_orders.csv";
 
     private final DataCache dataCache;
 
@@ -32,116 +33,145 @@ public class OrderCsvLoader {
 
     @PostConstruct
     public void loadOrders() {
+        try {
+            InputStream inputStream = getClass()
+                    .getClassLoader()
+                    .getResourceAsStream(DEFAULT_ORDER_FILE_PATH);
+
+            if (inputStream == null) {
+                throw new IllegalStateException(
+                        "Customer orders CSV file not found: " + DEFAULT_ORDER_FILE_PATH
+                );
+            }
+
+            loadOrdersFromInputStream(inputStream, "Default CSV: " + DEFAULT_ORDER_FILE_PATH);
+
+        } catch (Exception ex) {
+            logger.error("Failed to load default customer orders CSV file.", ex);
+            throw new IllegalStateException("Failed to load default customer orders CSV file.", ex);
+        }
+    }
+
+    public DataUploadResponse reloadOrdersFromUpload(
+            InputStream inputStream,
+            String fileName
+    ) {
+        return loadOrdersFromInputStream(inputStream, "Uploaded CSV: " + fileName);
+    }
+
+    private DataUploadResponse loadOrdersFromInputStream(
+            InputStream inputStream,
+            String sourceName
+    ) {
         Map<String, List<CustomerOrder>> ordersByCustomerId = new HashMap<>();
 
         int loadedRows = 0;
         int skippedRows = 0;
 
-        try {
-            InputStream inputStream = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream(ORDER_FILE_PATH);
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(inputStream, StandardCharsets.UTF_8)
+        )) {
+            String line;
+            boolean isHeader = true;
 
-            if (inputStream == null) {
-                throw new IllegalStateException("Customer orders CSV file not found: " + ORDER_FILE_PATH);
-            }
+            while ((line = reader.readLine()) != null) {
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
 
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(inputStream, StandardCharsets.UTF_8)
-            )) {
-                String line;
-                boolean isHeader = true;
+                if (line.isBlank()) {
+                    continue;
+                }
 
-                while ((line = reader.readLine()) != null) {
-                    if (isHeader) {
-                        isHeader = false;
-                        continue;
-                    }
+                String[] columns = line.split(",", -1);
 
-                    if (line.isBlank()) {
-                        continue;
-                    }
+                if (columns.length < 8) {
+                    skippedRows++;
+                    logger.warn(
+                            "Invalid CSV row skipped. Expected 8 columns but found {}. Row: {}",
+                            columns.length,
+                            line
+                    );
+                    continue;
+                }
 
-                    String[] columns = line.split(",", -1);
+                try {
+                    String customerId = clean(columns[0]);
+                    String orderId = clean(columns[1]);
+                    LocalDate orderDate = LocalDate.parse(clean(columns[2]));
+                    BigDecimal amount = parseAmount(clean(columns[3]));
+                    String productCategory = clean(columns[4]);
+                    String orderStatus = clean(columns[5]);
+                    String paymentMode = clean(columns[6]);
+                    BigDecimal discountAmount = parseDiscountAmount(clean(columns[7]));
 
-                    if (columns.length < 8) {
+                    if (customerId.isBlank() || orderId.isBlank()) {
                         skippedRows++;
-                        logger.warn(
-                                "Invalid CSV row skipped. Expected 8 columns but found {}. Row: {}",
-                                columns.length,
-                                line
-                        );
+                        logger.warn("Invalid CSV row skipped. customerId/orderId is blank. Row: {}", line);
                         continue;
                     }
 
-                    try {
-                        String customerId = clean(columns[0]);
-                        String orderId = clean(columns[1]);
-                        LocalDate orderDate = LocalDate.parse(clean(columns[2]));
-                        BigDecimal amount = parseAmount(clean(columns[3]));
-                        String productCategory = clean(columns[4]);
-                        String orderStatus = clean(columns[5]);
-                        String paymentMode = clean(columns[6]);
-                        BigDecimal discountAmount = parseDiscountAmount(clean(columns[7]));
-
-                        if (customerId.isBlank() || orderId.isBlank()) {
-                            skippedRows++;
-                            logger.warn("Invalid CSV row skipped. customerId/orderId is blank. Row: {}", line);
-                            continue;
-                        }
-
-                        if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                            skippedRows++;
-                            logger.warn("Invalid CSV row skipped. Negative amount is not allowed. Row: {}", line);
-                            continue;
-                        }
-
-                        if (discountAmount.compareTo(BigDecimal.ZERO) < 0) {
-                            skippedRows++;
-                            logger.warn("Invalid CSV row skipped. Negative discount amount is not allowed. Row: {}", line);
-                            continue;
-                        }
-
-                        if (discountAmount.compareTo(amount) > 0) {
-                            skippedRows++;
-                            logger.warn("Invalid CSV row skipped. Discount amount cannot be greater than order amount. Row: {}", line);
-                            continue;
-                        }
-
-                        CustomerOrder order = new CustomerOrder();
-                        order.setCustomerId(customerId);
-                        order.setOrderId(orderId);
-                        order.setOrderDate(orderDate);
-                        order.setAmount(amount);
-                        order.setProductCategory(defaultIfBlank(productCategory));
-                        order.setOrderStatus(defaultIfBlank(orderStatus));
-                        order.setPaymentMode(defaultIfBlank(paymentMode));
-                        order.setDiscountAmount(discountAmount);
-
-                        ordersByCustomerId
-                                .computeIfAbsent(customerId, key -> new ArrayList<>())
-                                .add(order);
-
-                        loadedRows++;
-
-                    } catch (Exception ex) {
+                    if (amount.compareTo(BigDecimal.ZERO) < 0) {
                         skippedRows++;
-                        logger.warn("Invalid CSV data skipped. Row: {}", line);
+                        logger.warn("Invalid CSV row skipped. Negative amount is not allowed. Row: {}", line);
+                        continue;
                     }
+
+                    if (discountAmount.compareTo(BigDecimal.ZERO) < 0) {
+                        skippedRows++;
+                        logger.warn("Invalid CSV row skipped. Negative discount amount is not allowed. Row: {}", line);
+                        continue;
+                    }
+
+                    if (discountAmount.compareTo(amount) > 0) {
+                        skippedRows++;
+                        logger.warn("Invalid CSV row skipped. Discount amount cannot be greater than order amount. Row: {}", line);
+                        continue;
+                    }
+
+                    CustomerOrder order = new CustomerOrder();
+                    order.setCustomerId(customerId);
+                    order.setOrderId(orderId);
+                    order.setOrderDate(orderDate);
+                    order.setAmount(amount);
+                    order.setProductCategory(defaultIfBlank(productCategory));
+                    order.setOrderStatus(defaultIfBlank(orderStatus));
+                    order.setPaymentMode(defaultIfBlank(paymentMode));
+                    order.setDiscountAmount(discountAmount);
+
+                    ordersByCustomerId
+                            .computeIfAbsent(customerId, key -> new ArrayList<>())
+                            .add(order);
+
+                    loadedRows++;
+
+                } catch (Exception ex) {
+                    skippedRows++;
+                    logger.warn("Invalid CSV data skipped. Row: {}", line);
                 }
             }
 
             dataCache.setOrdersByCustomerId(ordersByCustomerId);
 
             logger.info(
-                    "Customer orders CSV loaded successfully. Loaded rows: {}, Skipped rows: {}",
+                    "Customer orders CSV loaded successfully from {}. Loaded rows: {}, Skipped rows: {}",
+                    sourceName,
                     loadedRows,
                     skippedRows
             );
 
+            return new DataUploadResponse(
+                    "ORDERS_CSV",
+                    sourceName,
+                    loadedRows,
+                    skippedRows,
+                    "Orders data refreshed successfully."
+            );
+
         } catch (Exception ex) {
-            logger.error("Failed to load customer orders CSV file.", ex);
-            throw new IllegalStateException("Failed to load customer orders CSV file.", ex);
+            logger.error("Failed to load customer orders CSV from {}.", sourceName, ex);
+            throw new IllegalStateException("Failed to load customer orders CSV.", ex);
         }
     }
 

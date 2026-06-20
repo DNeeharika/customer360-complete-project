@@ -48,20 +48,19 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
 
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/customers/export/**")
                         .hasAnyRole("ADMIN", "MANAGER")
 
-                                .requestMatchers(HttpMethod.GET, "/api/customers/export/**")
-                                .hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/customers/*/summary")
+                        .hasAnyRole("ADMIN", "MANAGER")
 
-                                .requestMatchers(HttpMethod.GET, "/api/customers/*/summary")
-                                .hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/customers/**")
+                        .hasAnyRole("ADMIN", "MANAGER", "VIEWER")
 
-                                .requestMatchers(HttpMethod.GET, "/api/customers/**")
-                                .hasAnyRole("ADMIN", "MANAGER", "VIEWER")
-
-
-                .anyRequest().authenticated()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -80,6 +79,7 @@ public class SecurityConfig {
                     "http://localhost:5173",
                     "http://localhost:5174"
             ));
+
             configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
             configuration.setExposedHeaders(List.of("Authorization"));
