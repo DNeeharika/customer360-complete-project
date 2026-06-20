@@ -1234,3 +1234,287 @@ button:disabled {
   background: #fee2e2;
 }
 
+.admin-upload-button {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-upload-button:hover {
+  background: #dbeafe;
+}
+
+.admin-upload-page {
+  min-height: 100vh;
+  background: #f6f8fc;
+  padding: 24px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #0f172a;
+}
+
+.admin-upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.admin-upload-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-upload-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.admin-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-upload-actions button {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-upload-actions .danger-button {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.admin-upload-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-right: 8px;
+}
+
+.admin-upload-user strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-upload-user span {
+  font-size: 11px;
+  font-weight: 900;
+  color: #2563eb;
+}
+
+.admin-upload-error {
+  margin-top: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-status-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.admin-status-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.admin-status-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-status-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 28px;
+  color: #2563eb;
+  font-weight: 900;
+}
+
+.admin-status-card p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.admin-upload-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.admin-upload-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.upload-card-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.upload-card-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.upload-format-box {
+  margin-top: 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 12px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.upload-format-box code {
+  display: block;
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.admin-upload-card input[type="file"] {
+  margin-top: 18px;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.selected-file {
+  margin: 10px 0 0;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-upload-card > button {
+  margin-top: 16px;
+  width: 100%;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-upload-card > button:hover {
+  background: #1d4ed8;
+}
+
+.admin-upload-card > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-result-box {
+  margin-top: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.upload-result-box h3 {
+  margin: 0 0 8px;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.upload-result-box p {
+  margin: 5px 0;
+  color: #14532d;
+  font-size: 13px;
+}
+
+.admin-upload-note {
+  margin-top: 18px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.admin-upload-note h3 {
+  margin: 0 0 6px;
+  color: #92400e;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.admin-upload-note p {
+  margin: 0;
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .admin-upload-header,
+  .admin-upload-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-status-grid,
+  .admin-upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-upload-user {
+    align-items: flex-start;
+  }
+}

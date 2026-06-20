@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import CustomerListPage from "./pages/CustomerListPage";
+import AdminDataUploadPage from "./pages/AdminDataUploadPage";
 
 function App() {
   return (
@@ -17,6 +18,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <CustomerListPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/data-upload"
+            element={
+              <ProtectedRoute>
+                <AdminDataUploadPage />
               </ProtectedRoute>
             }
           />

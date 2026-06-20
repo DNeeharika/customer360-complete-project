@@ -15,6 +15,7 @@ function CustomerListPage() {
 
   const canUseAiSummary = hasRole("ADMIN", "MANAGER");
   const canExport = hasRole("ADMIN", "MANAGER");
+  const canManageData = hasRole("ADMIN");
 
 
   const [customers, setCustomers] = useState([]);
@@ -476,6 +477,16 @@ function CustomerListPage() {
             <strong>{user?.fullName || user?.username || "User"}</strong>
             <small>{user?.role || "USER"}</small>
           </div>
+
+          {canManageData && (
+            <button
+              type="button"
+              className="admin-upload-button"
+              onClick={() => navigate("/admin/data-upload")}
+            >
+              Upload Data
+            </button>
+          )}
 
           <button type="button" className="logout-button" onClick={handleLogout}>
             Logout
