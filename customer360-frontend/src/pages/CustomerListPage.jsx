@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   downloadExport,
   getCustomerDetails,
@@ -7,6 +9,9 @@ import {
 } from "../api/customerApi";
 
 function CustomerListPage() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [summary, setSummary] = useState("");
@@ -38,6 +43,14 @@ function CustomerListPage() {
     sortDir: "asc",
     rowsPerPage: 10,
   });
+
+  const handleLogout = () => {
+    logout();
+
+    navigate("/login", {
+      replace: true,
+    });
+  };
 
   useEffect(() => {
     loadCustomers(0);
@@ -253,7 +266,6 @@ function CustomerListPage() {
         ["Profile", "Date of Birth", customer.dateOfBirth],
         ["Profile", "Address", customer.address],
         ["Profile", "Customer Type", customer.customerType],
-
         ["Preference", "Membership", formatMembership(customer.membership)],
         [
           "Preference",
@@ -272,7 +284,6 @@ function CustomerListPage() {
           formatBoolean(customer.marketingConsent),
         ],
         ["Preference", "Preferred Contact Time", customer.preferredContactTime],
-
         ["Business", "Total Orders", customer.totalOrders],
         ["Business", "Total Order Amount", customer.totalOrderAmount],
         ["Business", "Total Discount", customer.totalDiscountAmount],
@@ -452,8 +463,18 @@ function CustomerListPage() {
 
         <div className="admin-box">
           <span className="bell">🔔</span>
-          <span className="avatar">AD</span>
-          <span>Admin User</span>
+          <span className="avatar">
+            {getInitials(user?.fullName || user?.username || "User")}
+          </span>
+
+          <div className="logged-in-user">
+            <strong>{user?.fullName || user?.username || "User"}</strong>
+            <small>{user?.role || "USER"}</small>
+          </div>
+
+          <button type="button" className="logout-button" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </header>
 

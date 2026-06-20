@@ -2,9 +2,22 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api/customers";
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("customer360_token");
+
+  if (!token) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 export const getCustomers = async (params = {}) => {
   const response = await axios.get(API_BASE_URL, {
     params,
+    headers: getAuthHeaders(),
   });
 
   return response.data;
@@ -13,19 +26,24 @@ export const getCustomers = async (params = {}) => {
 export const getCustomersPage = async (params = {}) => {
   const response = await axios.get(`${API_BASE_URL}/page`, {
     params,
+    headers: getAuthHeaders(),
   });
 
   return response.data;
 };
 
 export const getCustomerDetails = async (customerId) => {
-  const response = await axios.get(`${API_BASE_URL}/${customerId}`);
+  const response = await axios.get(`${API_BASE_URL}/${customerId}`, {
+    headers: getAuthHeaders(),
+  });
 
   return response.data;
 };
 
 export const getCustomerSummary = async (customerId) => {
-  const response = await axios.get(`${API_BASE_URL}/${customerId}/summary`);
+  const response = await axios.get(`${API_BASE_URL}/${customerId}/summary`, {
+    headers: getAuthHeaders(),
+  });
 
   return response.data;
 };
@@ -33,6 +51,7 @@ export const getCustomerSummary = async (customerId) => {
 export const downloadExport = async (format) => {
   const response = await axios.get(`${API_BASE_URL}/export/${format}`, {
     responseType: "blob",
+    headers: getAuthHeaders(),
   });
 
   const fileExtensionMap = {
