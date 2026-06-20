@@ -10,7 +10,12 @@ import {
 
 function CustomerListPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+
+  const { user, logout, hasRole } = useAuth();
+
+  const canUseAiSummary = hasRole("ADMIN", "MANAGER");
+  const canExport = hasRole("ADMIN", "MANAGER");
+
 
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -658,16 +663,21 @@ function CustomerListPage() {
             </span>
           </div>
 
-          <div className="export-buttons">
-            <button className="success-button" onClick={() => downloadExport("csv")}>
-              ⇩ Export CSV
-            </button>
-            <button className="purple-button" onClick={exportCurrentPageJson}>
-              ⇩ Export JSON
-            </button>
-            <button onClick={() => downloadExport("excel")}>Export Excel</button>
-            <button onClick={() => downloadExport("pdf")}>Export PDF</button>
-          </div>
+          {canExport && (
+            <div className="export-buttons">
+              <button className="success-button" onClick={() => downloadExport("csv")}>
+                ⇩ Export CSV
+              </button>
+
+              <button className="purple-button" onClick={exportCurrentPageJson}>
+                ⇩ Export JSON
+              </button>
+
+              <button onClick={() => downloadExport("excel")}>Export Excel</button>
+
+              <button onClick={() => downloadExport("pdf")}>Export PDF</button>
+            </div>
+          )}
         </div>
 
         <div className="customer-table-wrap">
@@ -759,25 +769,29 @@ function CustomerListPage() {
                           👁
                         </button>
 
-                        <button
-                          title="Generate AI Summary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleGenerateSummary(customer.customerId);
-                          }}
-                        >
-                          ✦
-                        </button>
+                        {canUseAiSummary && (
+                          <button
+                            title="Generate AI Summary"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleGenerateSummary(customer.customerId);
+                            }}
+                          >
+                            ✦
+                          </button>
+                        )}
 
-                        <button
-                          title="Download Customer CSV"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            exportCustomerCsv(customer.customerId);
-                          }}
-                        >
-                          ⇩
-                        </button>
+                        {canExport && (
+                          <button
+                            title="Download Customer CSV"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              exportCustomerCsv(customer.customerId);
+                            }}
+                          >
+                            ⇩
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -881,21 +895,26 @@ function CustomerListPage() {
                   <span>{safe(selectedCustomer.customerSegment)}</span>
                 </div>
               </div>
-
               <div className="profile-actions">
-                <button onClick={() => exportCustomerCsv(selectedCustomer.customerId)}>
-                  Export Profile CSV
-                </button>
+                {canExport && (
+                  <>
+                    <button onClick={() => exportCustomerCsv(selectedCustomer.customerId)}>
+                      Export Profile CSV
+                    </button>
 
-                <button onClick={exportSelectedCustomerPdf}>Print / PDF</button>
+                    <button onClick={exportSelectedCustomerPdf}>Print / PDF</button>
+                  </>
+                )}
 
-                <button
-                  className="star-action-button"
-                  title="Generate AI Summary"
-                  onClick={() => handleGenerateSummary(selectedCustomer.customerId)}
-                >
-                  {summaryLoading ? "..." : "✦"}
-                </button>
+                {canUseAiSummary && (
+                  <button
+                    className="star-action-button"
+                    title="Generate AI Summary"
+                    onClick={() => handleGenerateSummary(selectedCustomer.customerId)}
+                  >
+                    {summaryLoading ? "..." : "✦"}
+                  </button>
+                )}
               </div>
             </div>
 

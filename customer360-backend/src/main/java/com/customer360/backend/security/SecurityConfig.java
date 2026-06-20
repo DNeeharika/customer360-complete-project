@@ -51,10 +51,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/customers/export/**")
                         .hasAnyRole("ADMIN", "MANAGER")
 
-                        .requestMatchers(HttpMethod.GET, "/api/customers/**")
-                        .hasAnyRole("ADMIN", "MANAGER", "VIEWER")
+                                .requestMatchers(HttpMethod.GET, "/api/customers/export/**")
+                                .hasAnyRole("ADMIN", "MANAGER")
 
-                        .anyRequest().authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/customers/*/summary")
+                                .hasAnyRole("ADMIN", "MANAGER")
+
+                                .requestMatchers(HttpMethod.GET, "/api/customers/**")
+                                .hasAnyRole("ADMIN", "MANAGER", "VIEWER")
+
+
+                .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
