@@ -100,6 +100,39 @@ public class PreferenceJsonLoader implements CommandLineRunner {
         }
     }
 
+    public DataUploadResponse resetPreferencesToDefault() {
+        try {
+            Path uploadedFilePath = getUploadedFilePath();
+
+            if (Files.exists(uploadedFilePath)) {
+                Files.delete(uploadedFilePath);
+                logger.info("Deleted persistent uploaded preferences JSON file: {}", uploadedFilePath);
+            }
+
+            InputStream inputStream = getClass()
+                    .getClassLoader()
+                    .getResourceAsStream(DEFAULT_PREFERENCE_FILE_PATH);
+
+            if (inputStream == null) {
+                throw new IllegalStateException(
+                        "Default customer preferences JSON file not found: " + DEFAULT_PREFERENCE_FILE_PATH
+                );
+            }
+
+            DataUploadResponse response = loadPreferencesFromInputStream(
+                    inputStream,
+                    "Default JSON after reset: " + DEFAULT_PREFERENCE_FILE_PATH
+            );
+
+            response.setMessage("Preferences data reset to default JSON successfully.");
+            return response;
+
+        } catch (Exception ex) {
+            logger.error("Failed to reset preferences data to default JSON.", ex);
+            throw new IllegalStateException("Failed to reset preferences data to default JSON.", ex);
+        }
+    }
+
     private DataUploadResponse loadPreferencesFromInputStream(
             InputStream inputStream,
             String sourceName

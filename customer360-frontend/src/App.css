@@ -1518,3 +1518,25 @@ button:disabled {
     align-items: flex-start;
   }
 }
+
+.reset-default-button {
+  margin-top: 14px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #f59e0b;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.reset-default-button:hover {
+  background: #ffedd5;
+}
+
+.reset-default-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

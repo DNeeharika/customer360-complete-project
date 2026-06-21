@@ -89,6 +89,28 @@ public class AdminDataController {
         );
     }
 
+    @PostMapping("/reset-defaults")
+    public Map<String, Object> resetToDefaultData() {
+        try {
+            DataUploadResponse ordersResponse = orderCsvLoader.resetOrdersToDefault();
+            DataUploadResponse preferencesResponse = preferenceJsonLoader.resetPreferencesToDefault();
+
+            return Map.of(
+                    "message", "Default CSV and JSON data restored successfully.",
+                    "orders", ordersResponse,
+                    "preferences", preferencesResponse,
+                    "ordersCustomerCount", dataCache.getOrderCustomerCount(),
+                    "preferencesCustomerCount", dataCache.getPreferenceCustomerCount()
+            );
+
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unable to reset data to default files."
+            );
+        }
+    }
+
     private void validateFile(
             MultipartFile file,
             String expectedExtension,

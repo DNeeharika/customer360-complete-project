@@ -58,3 +58,14 @@ export const uploadPreferencesJson = async (file) => {
   return response.data;
 };
 
+export const resetDefaultData = async () => {
+  const response = await axios.post(
+    `${ADMIN_DATA_API_BASE_URL}/reset-defaults`,
+    {},
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+
+  return response.data;
+};

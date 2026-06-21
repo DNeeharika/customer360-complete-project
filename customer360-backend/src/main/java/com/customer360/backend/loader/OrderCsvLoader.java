@@ -101,6 +101,39 @@ public class OrderCsvLoader {
         }
     }
 
+    public DataUploadResponse resetOrdersToDefault() {
+        try {
+            Path uploadedFilePath = getUploadedFilePath();
+
+            if (Files.exists(uploadedFilePath)) {
+                Files.delete(uploadedFilePath);
+                logger.info("Deleted persistent uploaded orders CSV file: {}", uploadedFilePath);
+            }
+
+            InputStream inputStream = getClass()
+                    .getClassLoader()
+                    .getResourceAsStream(DEFAULT_ORDER_FILE_PATH);
+
+            if (inputStream == null) {
+                throw new IllegalStateException(
+                        "Default customer orders CSV file not found: " + DEFAULT_ORDER_FILE_PATH
+                );
+            }
+
+            DataUploadResponse response = loadOrdersFromInputStream(
+                    inputStream,
+                    "Default CSV after reset: " + DEFAULT_ORDER_FILE_PATH
+            );
+
+            response.setMessage("Orders data reset to default CSV successfully.");
+            return response;
+
+        } catch (Exception ex) {
+            logger.error("Failed to reset orders data to default CSV.", ex);
+            throw new IllegalStateException("Failed to reset orders data to default CSV.", ex);
+        }
+    }
+
     private DataUploadResponse loadOrdersFromInputStream(
             InputStream inputStream,
             String sourceName
