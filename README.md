@@ -149,8 +149,10 @@ The uploaded data is refreshed in backend memory/cache and immediately reflected
 Important:
 
 ```text
-Uploaded CSV/JSON data is currently stored in memory.
-If the backend restarts, default files from src/main/resources/data are loaded again.
+Uploaded CSV/JSON files are stored persistently under customer360-backend/uploads.
+On backend restart, the application first checks the uploads folder.
+If uploaded files are available, they are loaded.
+If uploaded files are not available, default files from src/main/resources/data are loaded.
 ```
 
 ## Run Backend
