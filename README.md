@@ -1,124 +1,97 @@
 # Customer360 Complete Project
 
-Customer360 is a full-stack customer data integration application that consolidates customer information from multiple data sources and provides a unified customer profile through a React frontend and Spring Boot backend.
-
-The project integrates customer profile data from MongoDB, customer order data from a CSV file, customer preference data from a JSON file, and AI-powered customer summary generation using Ollama local AI.
-
----
+Customer360 is a full-stack customer data integration application built using Spring Boot, React, MongoDB, CSV, and JSON. The application consolidates customer profile data, customer order data, and customer preference data using a common `customerId` and presents a unified Customer360 dashboard.
 
 ## Project Objective
 
-The objective of Customer360 is to build a web application that can:
+The purpose of this project is to demonstrate how different data sources can be integrated into one application.
 
-* Read customer profile data from MongoDB
-* Read customer order data from CSV
-* Read customer preference data from JSON
-* Match all data using `customerId`
-* Display consolidated customer profile
-* Show customer orders
-* Calculate total order amount
-* Show membership information
-* Show preferred communication channel
-* Provide search, filtering, sorting, and export features
-* Generate AI-powered customer summary using Ollama local AI
+The application reads data from:
 
----
+| Data Source | Purpose                  |
+| ----------- | ------------------------ |
+| MongoDB     | Customer profile data    |
+| CSV File    | Customer order data      |
+| JSON File   | Customer preference data |
 
-## Repository Structure
+The system matches all data using:
 
 ```text
-customer360-complete-project
-  customer360-backend
-  customer360-frontend
-  docs
-  .gitignore
-  README.md
+customerId
 ```
 
----
+and displays a consolidated customer profile with customer details, orders, total order amount, membership details, preferred communication channel, warnings, and data quality status.
 
-## Project Modules
+## Current Features
 
-| Module                 | Description                     |
-| ---------------------- | ------------------------------- |
-| `customer360-backend`  | Spring Boot backend application |
-| `customer360-frontend` | React frontend application      |
-| `docs`                 | Complete project documentation  |
+| Feature                            | Status    |
+| ---------------------------------- | --------- |
+| Customer profile data from MongoDB | Completed |
+| Customer order data from CSV       | Completed |
+| Customer preference data from JSON | Completed |
+| Consolidated customer profile      | Completed |
+| Search, filter, sort, pagination   | Completed |
+| Export CSV, Excel, PDF, JSON       | Completed |
+| Customer profile export            | Completed |
+| AI-powered customer summary        | Completed |
+| Login page                         | Completed |
+| JWT authentication                 | Completed |
+| Protected dashboard route          | Completed |
+| Logout / switch user               | Completed |
+| Role-Based Access Control          | Completed |
+| Admin CSV/JSON upload API          | Completed |
+| Admin data upload UI               | Completed |
+| Dynamic CSV/JSON refresh           | Completed |
 
----
+## User Roles
 
-## Technology Stack
+| Role    | Access                                                   |
+| ------- | -------------------------------------------------------- |
+| ADMIN   | Full access, dashboard, AI summary, exports, data upload |
+| MANAGER | Dashboard, AI summary, exports                           |
+| VIEWER  | View-only customer dashboard                             |
 
-| Layer             | Technology                   |
-| ----------------- | ---------------------------- |
-| Frontend          | React, Vite, JavaScript, CSS |
-| Backend           | Java 25, Spring Boot 4.1.0   |
-| Database          | MongoDB Atlas                |
-| Data Files        | CSV, JSON                    |
-| AI Integration    | Ollama Local AI              |
-| API Documentation | Swagger/OpenAPI              |
-| Testing           | JUnit 5, Mockito             |
-| Build Tools       | Maven, npm                   |
-| Version Control   | Git, GitHub                  |
+## Demo Users
 
----
+| Username | Password    | Role    |
+| -------- | ----------- | ------- |
+| admin    | Admin@123   | ADMIN   |
+| manager  | Manager@123 | MANAGER |
+| viewer   | Viewer@123  | VIEWER  |
 
-## Data Sources
-
-| Source          | Data Type            | Purpose                                               |
-| --------------- | -------------------- | ----------------------------------------------------- |
-| MongoDB         | Customer profile     | Stores name, email, mobile, city                      |
-| CSV File        | Customer orders      | Stores order ID, order date, amount                   |
-| JSON File       | Customer preferences | Stores membership and preferred communication channel |
-| Ollama Local AI | AI summary           | Generates professional customer summary               |
-
----
-
-## Features Implemented
-
-### Backend Features
-
-* MongoDB customer profile integration
-* CSV customer order loading
-* JSON customer preference loading
-* Customer data consolidation using `customerId`
-* Search, filter, and sort APIs
-* Customer detail API
-* AI-powered summary API using Ollama
-* Rule-based fallback summary
-* Full customer export as CSV, Excel, and PDF
-* Sensitive data masking for email and mobile
-* Data quality warning handling
-* Global exception handling
-* Structured logging
-* Swagger/OpenAPI documentation
-* Unit tests
-
-### Frontend Features
-
-* Customer list screen
-* Search customers
-* Filter by city, membership, and preferred channel
-* Sort customers
-* View customer details
-* View customer orders
-* Generate AI customer summary
-* Export full customer list as CSV, Excel, and PDF
-* Export selected customer details as CSV
-* Export selected customer details as PDF using browser print/save
-* Responsive enterprise-style UI
-
----
-
-## Backend Application
-
-Backend folder:
+## Project Structure
 
 ```text
-customer360-backend
+customer360
+├── customer360-backend
+│   ├── src/main/java
+│   ├── src/main/resources/data
+│   └── pom.xml
+│
+├── customer360-frontend
+│   ├── src
+│   ├── package.json
+│   └── vite.config.js
+│
+└── README.md
 ```
 
-Backend runs on:
+## Backend
+
+Technology stack:
+
+| Technology      | Version / Usage             |
+| --------------- | --------------------------- |
+| Java            | 25                          |
+| Spring Boot     | 4.1.0                       |
+| Spring Security | JWT authentication and RBAC |
+| MongoDB Atlas   | Customer profile data       |
+| CSV             | Customer orders             |
+| JSON            | Customer preferences        |
+| Maven           | Build tool                  |
+| Swagger/OpenAPI | API testing                 |
+
+Backend URL:
 
 ```text
 http://localhost:8080
@@ -130,247 +103,94 @@ Swagger URL:
 http://localhost:8080/swagger-ui.html
 ```
 
-Main backend APIs:
+## Frontend
 
-| Method | Endpoint                              | Description                              |
-| ------ | ------------------------------------- | ---------------------------------------- |
-| GET    | `/api/customers`                      | Get all consolidated customers           |
-| GET    | `/api/customers/{customerId}`         | Get selected customer details            |
-| GET    | `/api/customers/{customerId}/summary` | Generate AI or fallback customer summary |
-| GET    | `/api/customers/export/csv`           | Export full customer data as CSV         |
-| GET    | `/api/customers/export/excel`         | Export full customer data as Excel       |
-| GET    | `/api/customers/export/pdf`           | Export full customer data as PDF         |
+Technology stack:
 
----
+| Technology   | Usage                      |
+| ------------ | -------------------------- |
+| React        | Frontend UI                |
+| Vite         | Development server         |
+| React Router | Login and protected routes |
+| Axios        | API integration            |
+| CSS          | Dashboard styling          |
 
-## Frontend Application
-
-Frontend folder:
+Frontend URL:
 
 ```text
-customer360-frontend
+http://localhost:5174
 ```
 
-Frontend runs on:
+## Application Flow
 
 ```text
-http://localhost:5173
+Login Page
+    ↓
+JWT Authentication
+    ↓
+Protected Customer Dashboard
+    ↓
+Customer List / Profile / AI Summary / Export
+    ↓
+Admin Data Upload for CSV and JSON
 ```
 
-The frontend communicates with backend using:
+## Dynamic Data Upload
+
+The Admin user can upload:
+
+| File Type | API                                  | Purpose                          |
+| --------- | ------------------------------------ | -------------------------------- |
+| CSV       | `/api/admin/data/upload/orders`      | Refresh customer order data      |
+| JSON      | `/api/admin/data/upload/preferences` | Refresh customer preference data |
+
+The uploaded data is refreshed in backend memory/cache and immediately reflected in the dashboard.
+
+Important:
 
 ```text
-http://localhost:8080/api/customers
+Uploaded CSV/JSON data is currently stored in memory.
+If the backend restarts, default files from src/main/resources/data are loaded again.
 ```
 
----
-
-## AI Integration
-
-Customer360 uses Ollama local AI for generating professional customer summaries.
-
-Configured model:
-
-```text
-llama3.2
-```
-
-Ollama URL:
-
-```text
-http://localhost:11434/api/generate
-```
-
-If Ollama is unavailable, the backend automatically returns a rule-based fallback summary.
-
-This ensures the summary API continues to work even when local AI is not running.
-
----
-
-## How to Run the Project
-
-### 1. Start Backend
-
-Open PowerShell:
+## Run Backend
 
 ```powershell
 cd C:\Users\neeha\Downloads\customer360\customer360-backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Backend will start at:
-
-```text
-http://localhost:8080
-```
-
----
-
-### 2. Start Frontend
-
-Open another PowerShell window:
+## Run Frontend
 
 ```powershell
 cd C:\Users\neeha\Downloads\customer360\customer360-frontend
-npm install
 npm run dev
 ```
 
-Frontend will start at:
-
-```text
-http://localhost:5173
-```
-
----
-
-### 3. Start or Verify Ollama
-
-Check Ollama:
+## Build Frontend
 
 ```powershell
-ollama --version
-ollama list
+cd C:\Users\neeha\Downloads\customer360\customer360-frontend
+npm run build
 ```
 
-Pull model if required:
-
-```powershell
-ollama pull llama3.2
-```
-
-Ollama normally runs at:
-
-```text
-http://localhost:11434
-```
-
----
-
-## Environment Variable
-
-MongoDB connection string is configured through environment variable:
-
-```text
-MONGODB_URI
-```
-
-Example:
-
-```text
-mongodb+srv://<username>:<password>@<cluster-url>/customer360_db
-```
-
-The actual MongoDB URI and password should not be committed to GitHub.
-
----
-
-## Documentation
-
-All project documents are available in the `docs` folder.
-
-| Document                     | File                                               |
-| ---------------------------- | -------------------------------------------------- |
-| Requirement Document         | `docs/Customer360_Requirement_Document.md`         |
-| Architecture Document        | `docs/Customer360_Architecture_Document.md`        |
-| Workflow Document            | `docs/Customer360_Workflow_Document.md`            |
-| Testing Document             | `docs/Customer360_Testing_Document.md`             |
-| Deployment Setup Document    | `docs/Customer360_Deployment_Setup_Document.md`    |
-| User Manual                  | `docs/Customer360_User_Manual.md`                  |
-| Project Submission Checklist | `docs/Customer360_Project_Submission_Checklist.md` |
-
----
-
-## Testing
-
-Run backend tests:
+## Compile Backend
 
 ```powershell
 cd C:\Users\neeha\Downloads\customer360\customer360-backend
-.\mvnw.cmd test
+.\mvnw.cmd clean compile
 ```
 
-Expected result:
+## MongoDB Atlas Note
+
+For development, MongoDB Atlas Network Access can allow:
 
 ```text
-BUILD SUCCESS
+0.0.0.0/0
 ```
 
-Unit tests cover:
+For production, restrict access to trusted IP addresses only.
 
-* Masking service
-* Customer consolidation service
-* Customer summary service
-* AI fallback behavior
-* Search/filter/sort logic
-* Missing data warnings
+## Current Status
 
----
-
-## Demo Flow
-
-Recommended project demo flow:
-
-```text
-1. Open GitHub repository
-2. Show project structure
-3. Open docs folder
-4. Show Requirement Document
-5. Show Architecture Document
-6. Start backend
-7. Open Swagger
-8. Test /api/customers
-9. Test /api/customers/C1001
-10. Test /api/customers/C1001/summary
-11. Start frontend
-12. Show customer list
-13. Search and filter customers
-14. Sort by total amount
-15. View customer details
-16. Generate AI Summary
-17. Export full customer data
-18. Export selected customer detail
-19. Show unit test BUILD SUCCESS
-```
-
----
-
-## Current Project Status
-
-| Area                  | Status    |
-| --------------------- | --------- |
-| Backend development   | Completed |
-| Frontend development  | Completed |
-| MongoDB integration   | Completed |
-| CSV integration       | Completed |
-| JSON integration      | Completed |
-| Ollama AI integration | Completed |
-| Rule-based fallback   | Completed |
-| Search/filter/sort    | Completed |
-| Export features       | Completed |
-| Swagger documentation | Completed |
-| Unit testing          | Completed |
-| Project documentation | Completed |
-| GitHub complete repo  | Completed |
-
----
-
-## Known Limitations
-
-The current version does not include:
-
-* User login
-* Role-based access control
-* Pagination
-* Production deployment
-* Docker setup
-* Frontend automated tests
-* Cloud AI integration
-
-These can be considered as future enhancements.
-
----
-
-## Author
-
-Neeharika D
+The project currently supports secure login, JWT authentication, protected customer dashboard, role-based UI and backend security, MongoDB customer profile integration, CSV order ingestion, JSON preference ingestion, and Admin-controlled dynamic CSV/JSON refresh.
