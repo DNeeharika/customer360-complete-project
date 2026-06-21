@@ -1,142 +1,25 @@
-# Customer360 Backend
+## Admin Data APIs
 
-This is the backend application for the Customer360 project. It is built using Java, Spring Boot, Spring Security, MongoDB, CSV, and JSON.
-
-The backend exposes REST APIs for authentication, customer data consolidation, export, AI summary, and Admin data upload.
-
-## Technology Stack
-
-| Technology        | Usage                         |
-| ----------------- | ----------------------------- |
-| Java 25           | Backend runtime               |
-| Spring Boot 4.1.0 | Application framework         |
-| Spring Web MVC    | REST APIs                     |
-| Spring Security   | JWT authentication and RBAC   |
-| MongoDB Atlas     | Customer profile data         |
-| CSV               | Customer order source         |
-| JSON              | Customer preference source    |
-| Maven             | Build tool                    |
-| Swagger/OpenAPI   | API documentation and testing |
-
-## Backend URL
-
-```text
-http://localhost:8080
-```
-
-## Swagger URL
-
-```text
-http://localhost:8080/swagger-ui.html
-```
-
-## Data Source Design
-
-The backend consolidates three different data sources:
-
-| Data                 | Source  |
-| -------------------- | ------- |
-| Customer Profile     | MongoDB |
-| Customer Orders      | CSV     |
-| Customer Preferences | JSON    |
-
-The common field used to merge data is:
-
-```text
-customerId
-```
-
-## Authentication
-
-The backend supports JWT-based authentication.
-
-Login API:
-
-```http
-POST /api/auth/login
-```
-
-Request:
-
-```json
-{
-  "username": "admin",
-  "password": "Admin@123"
-}
-```
-
-Response:
-
-```json
-{
-  "token": "jwt-token",
-  "username": "admin",
-  "fullName": "Admin User",
-  "role": "ADMIN"
-}
-```
-
-Current user API:
-
-```http
-GET /api/auth/me
-```
-
-Header:
-
-```text
-Authorization: Bearer <token>
-```
-
-## Demo Users
-
-| Username | Password    | Role    |
-| -------- | ----------- | ------- |
-| admin    | Admin@123   | ADMIN   |
-| manager  | Manager@123 | MANAGER |
-| viewer   | Viewer@123  | VIEWER  |
-
-## Role-Based Access Control
-
-| API / Feature     | ADMIN | MANAGER | VIEWER |
-| ----------------- | ----: | ------: | -----: |
-| Login             |   Yes |     Yes |    Yes |
-| Customer list     |   Yes |     Yes |    Yes |
-| Customer profile  |   Yes |     Yes |    Yes |
-| AI summary        |   Yes |     Yes |     No |
-| Export APIs       |   Yes |     Yes |     No |
-| Admin data upload |   Yes |      No |     No |
-
-## Main APIs
-
-### Customer APIs
-
-```http
-GET /api/customers
-GET /api/customers/page
-GET /api/customers/{customerId}
-GET /api/customers/{customerId}/summary
-```
-
-### Export APIs
-
-```http
-GET /api/customers/export/csv
-GET /api/customers/export/excel
-GET /api/customers/export/pdf
-```
-
-### Admin Data Upload APIs
+The backend provides Admin-only APIs for dynamic CSV/JSON upload, persistent file storage, status check, and reset to default data.
 
 ```http
 GET  /api/admin/data/status
 POST /api/admin/data/upload/orders
 POST /api/admin/data/upload/preferences
+POST /api/admin/data/reset-defaults
 ```
+
+All Admin data APIs require:
+
+```text
+Authorization: Bearer <admin-token>
+```
+
+Only users with the `ADMIN` role can access these APIs.
 
 ## Dynamic CSV and JSON Upload
 
-Admin can upload new CSV/JSON files using the Admin APIs.
+Admin can upload new CSV and JSON files using the Admin APIs or the React Admin Data Upload page.
 
 Orders CSV upload:
 
@@ -150,10 +33,64 @@ Preferences JSON upload:
 POST /api/admin/data/upload/preferences
 ```
 
-Both APIs require:
+The uploaded files are saved persistently in:
 
 ```text
-Authorization: Bearer <admin-token>
+customer360-backend/uploads
+```
+
+The backend stores uploaded files using fixed names:
+
+```text
+customer_orders.csv
+customer_preferences.json
+```
+
+After upload, the backend immediately refreshes the in-memory cache, so the dashboard shows the latest uploaded data without restarting the application.
+
+## Persistent Upload Behavior
+
+The backend loading logic works as follows:
+
+```text
+Application starts
+    ↓
+Check customer360-backend/uploads folder
+    ↓
+If uploaded customer_orders.csv exists, load it
+Else load default data/customer_orders.csv from resources
+    ↓
+If uploaded customer_preferences.json exists, load it
+Else load default data/customer_preferences.json from resources
+```
+
+This means uploaded CSV/JSON data remains available even after backend restart.
+
+## Reset to Default Data
+
+Admin can reset the application back to default CSV and JSON files.
+
+Reset API:
+
+```http
+POST /api/admin/data/reset-defaults
+```
+
+Reset behavior:
+
+```text
+1. Deletes customer360-backend/uploads/customer_orders.csv
+2. Deletes customer360-backend/uploads/customer_preferences.json
+3. Reloads default CSV from src/main/resources/data/customer_orders.csv
+4. Reloads default JSON from src/main/resources/data/customer_preferences.json
+5. Updates backend cache immediately
+```
+
+Expected default status after reset:
+
+```text
+ordersCustomerCount = 6
+preferencesCustomerCount = 5
 ```
 
 ## Orders CSV Format
@@ -192,33 +129,7 @@ Example:
 ]
 ```
 
-## Dynamic Cache Behavior
-
-Uploaded CSV and JSON files refresh backend memory/cache immediately.
-
-Current behavior:
-
-| Action          | Result                                     |
-| --------------- | ------------------------------------------ |
-| Upload CSV/JSON | Dashboard updates immediately              |
-| Browser refresh | Data remains                               |
-| Backend restart | Default files reload from resources folder |
-
-## Run Backend
-
-```powershell
-cd C:\Users\neeha\Downloads\customer360\customer360-backend
-.\mvnw.cmd spring-boot:run
-```
-
-## Compile Backend
-
-```powershell
-cd C:\Users\neeha\Downloads\customer360\customer360-backend
-.\mvnw.cmd clean compile
-```
-
-## Test Login Using PowerShell
+## Test Reset API Using PowerShell
 
 ```powershell
 $body = @{
@@ -232,40 +143,15 @@ $login = Invoke-RestMethod `
   -ContentType "application/json" `
   -Body $body
 
-$login.token
-```
-
-## Test Customer API Using Token
-
-```powershell
 $headers = @{
   Authorization = "Bearer $($login.token)"
 }
 
 Invoke-RestMethod `
-  -Uri "http://localhost:8080/api/customers/page?page=0&size=5" `
+  -Uri "http://localhost:8080/api/admin/data/reset-defaults" `
+  -Method POST `
   -Headers $headers
 ```
-
-## Test Admin Data Status
-
-```powershell
-Invoke-RestMethod `
-  -Uri "http://localhost:8080/api/admin/data/status" `
-  -Headers $headers
-```
-
-## MongoDB Atlas Setup
-
-The backend uses MongoDB Atlas for customer profile data.
-
-For development, Atlas Network Access can allow:
-
-```text
-0.0.0.0/0
-```
-
-For production, this should be restricted to trusted IP addresses only.
 
 ## Current Backend Status
 
@@ -273,12 +159,14 @@ The backend supports:
 
 ```text
 Authentication
-JWT Token
+JWT token
 RBAC
 Customer data consolidation
 MongoDB + CSV + JSON integration
 Export APIs
 AI summary API
 Admin dynamic CSV/JSON upload
+Persistent uploaded CSV/JSON storage
+Reset to default data
 Swagger API testing
 ```
