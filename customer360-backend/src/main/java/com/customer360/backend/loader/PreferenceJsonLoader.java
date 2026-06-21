@@ -11,6 +11,10 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +26,7 @@ public class PreferenceJsonLoader implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(PreferenceJsonLoader.class);
 
     private static final String DEFAULT_PREFERENCE_FILE_PATH = "data/customer_preferences.json";
+    private static final String UPLOAD_FILE_NAME = "customer_preferences.json";
 
     private final DataCache dataCache;
 
@@ -32,6 +37,17 @@ public class PreferenceJsonLoader implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
+            Path uploadedFilePath = getUploadedFilePath();
+
+            if (Files.exists(uploadedFilePath)) {
+                logger.info("Loading customer preferences from persistent uploaded file: {}", uploadedFilePath);
+                loadPreferencesFromInputStream(
+                        Files.newInputStream(uploadedFilePath),
+                        "Persistent Uploaded JSON: " + uploadedFilePath
+                );
+                return;
+            }
+
             InputStream inputStream = getClass()
                     .getClassLoader()
                     .getResourceAsStream(DEFAULT_PREFERENCE_FILE_PATH);
@@ -41,13 +57,14 @@ public class PreferenceJsonLoader implements CommandLineRunner {
                 return;
             }
 
+            logger.info("Loading customer preferences from default resource file: {}", DEFAULT_PREFERENCE_FILE_PATH);
             loadPreferencesFromInputStream(
                     inputStream,
                     "Default JSON: " + DEFAULT_PREFERENCE_FILE_PATH
             );
 
         } catch (Exception ex) {
-            logger.error("Error while loading default customer_preferences.json", ex);
+            logger.error("Error while loading customer preferences JSON file.", ex);
         }
     }
 
@@ -55,7 +72,32 @@ public class PreferenceJsonLoader implements CommandLineRunner {
             InputStream inputStream,
             String fileName
     ) {
-        return loadPreferencesFromInputStream(inputStream, "Uploaded JSON: " + fileName);
+        try {
+            Path uploadedFilePath = getUploadedFilePath();
+
+            Files.createDirectories(uploadedFilePath.getParent());
+
+            Files.copy(
+                    inputStream,
+                    uploadedFilePath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            logger.info(
+                    "Uploaded preferences JSON saved successfully. Original file: {}, Saved file: {}",
+                    fileName,
+                    uploadedFilePath
+            );
+
+            return loadPreferencesFromInputStream(
+                    Files.newInputStream(uploadedFilePath),
+                    "Uploaded JSON: " + uploadedFilePath
+            );
+
+        } catch (Exception ex) {
+            logger.error("Failed to persist uploaded preferences JSON file.", ex);
+            throw new IllegalStateException("Failed to persist uploaded preferences JSON file.", ex);
+        }
     }
 
     private DataUploadResponse loadPreferencesFromInputStream(
@@ -101,12 +143,30 @@ public class PreferenceJsonLoader implements CommandLineRunner {
                     sourceName,
                     loadedCount,
                     skippedCount,
-                    "Preferences data refreshed successfully."
+                    "Preferences data refreshed and saved successfully."
             );
 
         } catch (Exception ex) {
             logger.error("Error while loading customer preferences JSON from {}", sourceName, ex);
             throw new IllegalStateException("Failed to load customer preferences JSON.", ex);
         }
+    }
+
+    private Path getUploadedFilePath() {
+        return getUploadDirectory().resolve(UPLOAD_FILE_NAME);
+    }
+
+    private Path getUploadDirectory() {
+        Path currentDirectory = Paths.get(System.getProperty("user.dir"))
+                .toAbsolutePath()
+                .normalize();
+
+        Path backendDirectoryFromRoot = currentDirectory.resolve("customer360-backend");
+
+        if (Files.exists(backendDirectoryFromRoot)) {
+            return backendDirectoryFromRoot.resolve("uploads");
+        }
+
+        return currentDirectory.resolve("uploads");
     }
 }

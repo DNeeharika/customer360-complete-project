@@ -12,6 +12,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +28,7 @@ public class OrderCsvLoader {
     private static final Logger logger = LoggerFactory.getLogger(OrderCsvLoader.class);
 
     private static final String DEFAULT_ORDER_FILE_PATH = "data/customer_orders.csv";
+    private static final String UPLOAD_FILE_NAME = "customer_orders.csv";
 
     private final DataCache dataCache;
 
@@ -34,6 +39,17 @@ public class OrderCsvLoader {
     @PostConstruct
     public void loadOrders() {
         try {
+            Path uploadedFilePath = getUploadedFilePath();
+
+            if (Files.exists(uploadedFilePath)) {
+                logger.info("Loading customer orders from persistent uploaded file: {}", uploadedFilePath);
+                loadOrdersFromInputStream(
+                        Files.newInputStream(uploadedFilePath),
+                        "Persistent Uploaded CSV: " + uploadedFilePath
+                );
+                return;
+            }
+
             InputStream inputStream = getClass()
                     .getClassLoader()
                     .getResourceAsStream(DEFAULT_ORDER_FILE_PATH);
@@ -44,11 +60,12 @@ public class OrderCsvLoader {
                 );
             }
 
+            logger.info("Loading customer orders from default resource file: {}", DEFAULT_ORDER_FILE_PATH);
             loadOrdersFromInputStream(inputStream, "Default CSV: " + DEFAULT_ORDER_FILE_PATH);
 
         } catch (Exception ex) {
-            logger.error("Failed to load default customer orders CSV file.", ex);
-            throw new IllegalStateException("Failed to load default customer orders CSV file.", ex);
+            logger.error("Failed to load customer orders CSV file.", ex);
+            throw new IllegalStateException("Failed to load customer orders CSV file.", ex);
         }
     }
 
@@ -56,7 +73,32 @@ public class OrderCsvLoader {
             InputStream inputStream,
             String fileName
     ) {
-        return loadOrdersFromInputStream(inputStream, "Uploaded CSV: " + fileName);
+        try {
+            Path uploadedFilePath = getUploadedFilePath();
+
+            Files.createDirectories(uploadedFilePath.getParent());
+
+            Files.copy(
+                    inputStream,
+                    uploadedFilePath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            logger.info(
+                    "Uploaded orders CSV saved successfully. Original file: {}, Saved file: {}",
+                    fileName,
+                    uploadedFilePath
+            );
+
+            return loadOrdersFromInputStream(
+                    Files.newInputStream(uploadedFilePath),
+                    "Uploaded CSV: " + uploadedFilePath
+            );
+
+        } catch (Exception ex) {
+            logger.error("Failed to persist uploaded orders CSV file.", ex);
+            throw new IllegalStateException("Failed to persist uploaded orders CSV file.", ex);
+        }
     }
 
     private DataUploadResponse loadOrdersFromInputStream(
@@ -166,13 +208,31 @@ public class OrderCsvLoader {
                     sourceName,
                     loadedRows,
                     skippedRows,
-                    "Orders data refreshed successfully."
+                    "Orders data refreshed and saved successfully."
             );
 
         } catch (Exception ex) {
-            logger.error("Failed to load customer orders CSV from {}.", sourceName, ex);
-            throw new IllegalStateException("Failed to load customer orders CSV.", ex);
+            logger.error("Failed to load customer orders CSV file from {}.", sourceName, ex);
+            throw new IllegalStateException("Failed to load customer orders CSV file.", ex);
         }
+    }
+
+    private Path getUploadedFilePath() {
+        return getUploadDirectory().resolve(UPLOAD_FILE_NAME);
+    }
+
+    private Path getUploadDirectory() {
+        Path currentDirectory = Paths.get(System.getProperty("user.dir"))
+                .toAbsolutePath()
+                .normalize();
+
+        Path backendDirectoryFromRoot = currentDirectory.resolve("customer360-backend");
+
+        if (Files.exists(backendDirectoryFromRoot)) {
+            return backendDirectoryFromRoot.resolve("uploads");
+        }
+
+        return currentDirectory.resolve("uploads");
     }
 
     private BigDecimal parseAmount(String value) {

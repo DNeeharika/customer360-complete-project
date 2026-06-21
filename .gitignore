@@ -28,3 +28,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+
+# Runtime uploaded CSV/JSON files
+customer360-backend/uploads/*.csv
+customer360-backend/uploads/*.json
