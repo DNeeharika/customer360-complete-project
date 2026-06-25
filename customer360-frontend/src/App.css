@@ -1540,3 +1540,364 @@ button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+/* =========================
+   ADMIN CUSTOMER MANAGEMENT
+========================= */
+
+.admin-customer-page {
+  min-height: 100vh;
+  background: #f6f8fc;
+  padding: 24px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #0f172a;
+}
+
+.admin-customer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.admin-customer-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-customer-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-customer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-customer-actions button {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-customer-actions .danger-button,
+.customer-row-actions .danger-button {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.admin-customer-actions .danger-button:hover,
+.customer-row-actions .danger-button:hover {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-customer-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-right: 8px;
+}
+
+.admin-customer-user strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-customer-user span {
+  font-size: 11px;
+  font-weight: 900;
+  color: #2563eb;
+}
+
+.admin-customer-error {
+  margin-top: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-customer-success {
+  margin-top: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-customer-layout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.customer-form-card,
+.customer-management-card,
+.admin-customer-note {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.customer-form-header h2,
+.customer-management-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.customer-form-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.customer-form-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.customer-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.customer-form-grid input,
+.customer-form-grid select,
+.customer-form-grid textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 10px;
+  font-size: 13px;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.customer-form-grid input:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.full-width-field {
+  grid-column: 1 / -1;
+}
+
+.customer-form-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+}
+
+.customer-form-actions button {
+  height: 38px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.customer-form-actions button:hover {
+  background: #1d4ed8;
+}
+
+.customer-form-actions .light-button {
+  background: #ffffff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.customer-form-actions .light-button:hover {
+  background: #eff6ff;
+}
+
+.customer-form-actions button:disabled,
+.customer-row-actions button:disabled,
+.customer-management-header button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.customer-management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.customer-management-header button {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.customer-management-table-wrap {
+  margin-top: 16px;
+  overflow-x: auto;
+  border: 1px solid #edf1f7;
+  border-radius: 10px;
+}
+
+.customer-management-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.customer-management-table th {
+  background: #f8fafc;
+  color: #334155;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.customer-management-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.customer-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.customer-row-actions button {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.customer-row-actions button:hover {
+  background: #dbeafe;
+}
+
+.admin-customer-muted {
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-customer-note {
+  margin-top: 18px;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.admin-customer-note h3 {
+  margin: 0 0 6px;
+  color: #92400e;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.admin-customer-note p {
+  margin: 0;
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Header fix after adding Upload Data + Manage Customers buttons */
+.admin-box {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Admin customer page responsive layout */
+@media (max-width: 1100px) {
+  .admin-customer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-customer-header,
+  .admin-customer-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-customer-user {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-customer-page {
+    padding: 12px;
+  }
+
+  .customer-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-form-actions,
+  .customer-row-actions {
+    flex-direction: column;
+  }
+
+  .customer-row-actions button {
+    width: 100%;
+  }
+}

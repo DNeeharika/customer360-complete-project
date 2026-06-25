@@ -17,7 +17,6 @@ function CustomerListPage() {
   const canExport = hasRole("ADMIN", "MANAGER");
   const canManageData = hasRole("ADMIN");
 
-
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [summary, setSummary] = useState("");
@@ -479,13 +478,23 @@ function CustomerListPage() {
           </div>
 
           {canManageData && (
-            <button
-              type="button"
-              className="admin-upload-button"
-              onClick={() => navigate("/admin/data-upload")}
-            >
-              Upload Data
-            </button>
+            <>
+              <button
+                type="button"
+                className="admin-upload-button"
+                onClick={() => navigate("/admin/data-upload")}
+              >
+                Upload Data
+              </button>
+
+              <button
+                type="button"
+                className="admin-upload-button"
+                onClick={() => navigate("/admin/customers")}
+              >
+                Manage Customers
+              </button>
+            </>
           )}
 
           <button type="button" className="logout-button" onClick={handleLogout}>

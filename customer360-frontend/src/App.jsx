@@ -5,6 +5,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import CustomerListPage from "./pages/CustomerListPage";
 import AdminDataUploadPage from "./pages/AdminDataUploadPage";
+import AdminCustomerManagementPage from "./pages/AdminCustomerManagementPage";
 
 function App() {
   return (
@@ -27,6 +28,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDataUploadPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/customers"
+            element={
+              <ProtectedRoute>
+                <AdminCustomerManagementPage />
               </ProtectedRoute>
             }
           />
